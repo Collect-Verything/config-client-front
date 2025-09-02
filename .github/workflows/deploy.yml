@@ -1,0 +1,47 @@
+name: Deploy React App to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create .env.production
+        run: |
+          echo "VITE_APP_HOST=${{ secrets.VITE_APP_HOST }}" >> .env.production
+          echo "VITE_APP_GIT_OWNER=${{ secrets.VITE_APP_GIT_OWNER }}" >> .env.production
+          echo "VITE_APP_GIT_REPO=${{ secrets.VITE_APP_GIT_REPO }}" >> .env.production
+          echo "VITE_APP_GIT_BEARER_PAT=${{ secrets.VITE_APP_GIT_BEARER_PAT }}" >> .env.production
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: cansefr/my-app:latest
+          platforms: linux/amd64
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd /home/root/my-app
+            docker pull cansefr/my-app:latest
+            docker compose down
+            docker compose up -d
