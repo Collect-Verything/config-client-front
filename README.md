@@ -16,19 +16,6 @@ docker compose watch react-dev
 
 ## 🌐 Mode production
 
-En production, le serveur dispose d’un fichier **docker-compose.yml** dans /home/root/my-app dédié à l’application, crée à la main pour le moment dans le but de gagner du temp, mais devrait etre versionné et dans le root
-
-```yaml
-version: "3.8"
-
-services:
-  frontend:
-    image: cansefr/my-app:latest
-    restart: always
-    ports:
-      - "80:3000"
-```
-
 Lors d’un **push sur la branche `main`**, une **GitHub Action** se déclenche et exécute automatiquement les commandes nécessaires sur le serveur pour :
 
 * récupérer la dernière version de l’image Docker,
