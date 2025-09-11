@@ -1,14 +1,14 @@
 # 🚀 Déploiement de l’application
 
+Ce projet a pour objectif de remplacer l’étape de configuration de la boutique client présente dans le dépôt Collect-Verything/collect-verything-app.
+L’idée est de simplifier la mise en place côté serveur pour des raisons de performance.
+
 ## ⚙️ Mode développement
 
 Pour lancer l’application en mode développement avec Docker :
 
 ```bash
-# Construire l’image (architecture AMD64)
 docker build --platform linux/amd64 -t my-app .
-
-# Lancer le service en mode "watch" (rechargement auto)
 docker compose watch react-dev
 ```
 
@@ -16,7 +16,19 @@ docker compose watch react-dev
 
 ## 🌐 Mode production
 
-En production, le serveur dispose d’un fichier **compose.yaml** dédié à l’application.
+En production, le serveur dispose d’un fichier **docker-compose.yml** dans /home/root/my-app dédié à l’application, crée à la main pour le moment dans le but de gagner du temp, mais devrait etre versionné et dans le root
+
+```yaml
+version: "3.8"
+
+services:
+  frontend:
+    image: cansefr/my-app:latest
+    restart: always
+    ports:
+      - "80:3000"
+```
+
 Lors d’un **push sur la branche `main`**, une **GitHub Action** se déclenche et exécute automatiquement les commandes nécessaires sur le serveur pour :
 
 * récupérer la dernière version de l’image Docker,
@@ -24,54 +36,9 @@ Lors d’un **push sur la branche `main`**, une **GitHub Action** se déclenche 
 * garantir que l’application est disponible avec la bonne configuration.
 
 👉 Résultat : le déploiement est **automatisé** via GitHub Actions et nécessite uniquement un push sur `main`.
+Pour plus d'info regarder la doc **Déclenchement du Workflow GitHub** dans **curl-actions.md**
 
 ---
-
-## 🛰️ Déclenchement du Workflow GitHub
-
-En plus du déploiement auto via `main`, il est possible de déclencher manuellement un **workflow GitHub Actions** à partir de ce projet (client-config-front).
-Cela se fait via l’API REST GitHub, endpoint :
-
-```
-POST https://api.github.com/repos/<owner>/<repo>/dispatches
-```
-
-### 🔹 Exemple de requête
-
-```bash
-curl -X POST \
-  -H "Accept: application/vnd.github+json" \
-  -H "Authorization: Bearer $GITHUB_PAT" \
-  https://api.github.com/repos/<owner>/<repo>/dispatches \
-  -d '{
-    "event_type": "deploy-site",
-    "client_payload": {
-      "primary": "#f542c2",
-      "secondary": "#fcba03",
-      "titreSite": "titretest",
-      "user": "usertest"
-    }
-  }'
-```
-
-### 🔹 Composition de la requête
-
-* `Authorization: Bearer $GITHUB_PAT` → **token GitHub (PAT)**.
-
-    * Ce token doit être **fine-grained**, avec permissions :
-
-        * `Actions: Read and write`
-        * `Contents: Read and write`
-    * Il est stocké dans les variables d’environnement (`env`) pour éviter toute fuite dans le code.
-
-* `https://api.github.com/repos/<owner>/<repo>/dispatches`
-
-    * `<owner>` → l’organisation ou le compte GitHub (`Collect-Verything` par ex.).
-    * `<repo>` → le nom du repo qui contient le workflow (`produits-cms-ui` par ex.).
-
-* `event_type` → correspond au nom de l’événement attendu dans le workflow (`on: repository_dispatch: types: [deploy-site]`).
-
-* `client_payload` → données envoyées au workflow (variables dynamiques pour le build : couleurs, titre, user, etc.).
 
 ### 🔹 Gestion des variables sensibles
 
