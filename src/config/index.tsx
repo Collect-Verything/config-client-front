@@ -55,7 +55,7 @@ export default function SimpleSiteConfigForm() {
             headers: {
                 "Accept": "application/vnd.github+json",
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${import.meta.env.VITE_APP_GIT_BEARER_PAT}`,
+                "Authorization": `Bearer personal access token revoked => need to generate a new one ${import.meta.env.VITE_APP_GIT_BEARER_PAT}`,
             },
             body: JSON.stringify({
                 event_type: "deploy-site",
